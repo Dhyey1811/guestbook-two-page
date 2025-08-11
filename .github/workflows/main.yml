@@ -1,11 +1,11 @@
-name: Main Checks
+name: Main Deploy
 
 on:
   push:
     branches: [ "main" ]
 
 jobs:
-  test-and-plan:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
@@ -14,45 +14,53 @@ jobs:
 
       - name: Use Node 18
         uses: actions/setup-node@v4
-        with:
-          node-version: 18
+        with: { node-version: 18 }
 
-      - name: Install backend deps
+      - name: Backend tests (coverage)
         working-directory: backend
-        run: npm install --no-audit --no-fund
-
-      - name: Unit tests (coverage)
-        working-directory: backend
-        run: npm test -- --coverage
+        run: |
+          npm ci
+          npm test -- --coverage
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
-
-      - name: Terraform fmt
-        working-directory: infra/terraform
-        run: terraform fmt -check -recursive
 
       - name: Terraform init
         working-directory: infra/terraform
         run: terraform init -input=false
 
-      # Real plan if AWS secrets exist
-      - name: Terraform plan (real)
-        if: ${{ env.AWS_ACCESS_KEY_ID != '' && env.AWS_SECRET_ACCESS_KEY != '' }}
+      - name: Terraform apply
         env:
           AWS_REGION: us-east-1
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         working-directory: infra/terraform
-        run: terraform plan -input=false
+        run: terraform apply -auto-approve -input=false
 
-      # Fallback plan with no AWS creds
-      - name: Terraform plan (offline fallback)
-        if: ${{ env.AWS_ACCESS_KEY_ID == '' || env.AWS_SECRET_ACCESS_KEY == '' }}
-        env:
-          TF_VAR_ci: true
-          TF_VAR_aws_region: us-east-1
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      - name: Read outputs
+        id: tfout
         working-directory: infra/terraform
-        run: terraform plan -input=false -refresh=false
+        run: |
+          echo "API_URL=$(terraform output -raw api_url)" >> $GITHUB_OUTPUT
+          echo "BUCKET=$(terraform output -raw site_bucket)" >> $GITHUB_OUTPUT
+          echo "DIST_ID=$(terraform output -raw cdn_id)" >> $GITHUB_OUTPUT
+
+      - name: Inject API URL into frontend/config.js
+        run: |
+          echo "window.API_URL='${{ steps.tfout.outputs.API_URL }}';" > frontend/config.js
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id:     ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Upload frontend to S3
+        run: aws s3 sync frontend "s3://${{ steps.tfout.outputs.BUCKET }}" --delete
+
+      - name: Invalidate CloudFront
+        run: aws cloudfront create-invalidation --distribution-id "${{ steps.tfout.outputs.DIST_ID }}" --paths "/*"
+
+      - name: Smoke test API
+        run: curl -sSf "${{ steps.tfout.outputs.API_URL }}/messages" | head
