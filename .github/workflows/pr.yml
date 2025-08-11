@@ -46,11 +46,4 @@ jobs:
         working-directory: infra/terraform
         run: terraform plan -input=false
 
-      # Fallback plan with no AWS creds
-      - name: Terraform plan (offline fallback)
-        if: ${{ github.secrets.AWS_ACCESS_KEY_ID == '' || github.secrets.AWS_SECRET_ACCESS_KEY == '' }}
-        env:
-          TF_VAR_ci: true
-          TF_VAR_aws_region: us-east-1
-        working-directory: infra/terraform
-        run: terraform plan -input=false -refresh=false
+     
