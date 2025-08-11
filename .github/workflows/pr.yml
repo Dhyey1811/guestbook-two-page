@@ -36,12 +36,12 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
 
-      # Auto-format (don't fail on style)
+      # Auto-format so style doesn't fail PRs
       - name: Terraform fmt (auto)
         working-directory: infra/terraform
         run: terraform fmt -recursive
 
-      # 🔧 Disable backend just for PR checks so we don't need AWS creds
+      # Disable S3 backend for PR checks so we don't need AWS creds
       - name: Temporarily disable backend
         working-directory: infra/terraform
         shell: bash
@@ -58,7 +58,7 @@ jobs:
         working-directory: infra/terraform
         run: terraform validate
 
-      # Offline plan with dummy creds so the AWS provider doesn't complain
+      # Offline plan with dummy creds; provider must skip checks when TF_VAR_ci=true
       - name: Terraform plan (offline)
         env:
           TF_VAR_ci: true
@@ -69,3 +69,12 @@ jobs:
           AWS_SECRET_ACCESS_KEY: "fake"
         working-directory: infra/terraform
         run: terraform plan -input=false -refresh=false
+
+      # Put backend.tf back so main branch deploys still work
+      - name: Re-enable backend
+        working-directory: infra/terraform
+        shell: bash
+        run: |
+          if [ -f backend.tf.disabled ]; then
+            mv backend.tf.disabled backend.tf
+          fi
