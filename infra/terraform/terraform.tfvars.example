@@ -1,2 +1,3 @@
-project    = "gb-two-page"
-aws_region = "us-east-1"
+project     = "gb-two-page"
+aws_region  = "us-east-1"
+alarm_email = "dhyeypatel9640@gmail.com"

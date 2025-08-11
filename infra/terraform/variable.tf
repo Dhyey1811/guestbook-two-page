@@ -8,3 +8,9 @@ variable "aws_region" {
   type        = string
   default     = "us-east-1"
 }
+
+variable "alarm_email" {
+  description = "Email for CloudWatch alarms"
+  type        = string
+  default     = "" # set in tfvars
+}
