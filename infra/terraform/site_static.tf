@@ -40,11 +40,11 @@ resource "aws_cloudfront_origin_access_identity" "oai" {
 resource "aws_s3_bucket_policy" "site_policy" {
   bucket = aws_s3_bucket.site.id
   policy = jsonencode({
-    Version   = "2012-10-17",
+    Version = "2012-10-17",
     Statement = [
       {
-        Sid       = "AllowCloudFrontRead",
-        Effect    = "Allow",
+        Sid    = "AllowCloudFrontRead",
+        Effect = "Allow",
         Principal = {
           # NOTE: for OAI use CanonicalUser with the OAI's canonical user ID
           CanonicalUser = aws_cloudfront_origin_access_identity.oai.s3_canonical_user_id
@@ -96,6 +96,6 @@ resource "aws_cloudfront_distribution" "cdn" {
   }
 }
 
-output "site_bucket"  { value = aws_s3_bucket.site.bucket }
-output "cdn_id"       { value = aws_cloudfront_distribution.cdn.id }
-output "cdn_domain"   { value = aws_cloudfront_distribution.cdn.domain_name }
+output "site_bucket" { value = aws_s3_bucket.site.bucket }
+output "cdn_id" { value = aws_cloudfront_distribution.cdn.id }
+output "cdn_domain" { value = aws_cloudfront_distribution.cdn.domain_name }
