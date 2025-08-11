@@ -3,6 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <title>Guest Book</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="stylesheet" href="style.css">
   </head>
   <body>
@@ -11,42 +12,82 @@
       <a class="button" href="add.html">Add a Message</a>
     </header>
 
-    <input id="q" placeholder="Search by name or text..." class="input" />
+    <div class="controls">
+      <input id="q" placeholder="Search by name or text…" class="input" />
+      <label for="sort">Sort:</label>
+      <select id="sort" class="input input--select">
+        <option value="newest">Newest first</option>
+        <option value="oldest">Oldest first</option>
+      </select>
+    </div>
+
     <ul id="messages" class="list"></ul>
 
+    <!-- Injected at deploy; default is set inside the file -->
+    <script src="config.js"></script>
     <script>
       let cache = [];
 
+      function timeAgo(ts) {
+        if (!ts) return "";
+        const s = Math.floor((Date.now() - Number(ts)) / 1000);
+        if (s < 60) return `${s}s ago`;
+        const m = Math.floor(s / 60); if (m < 60) return `${m}m ago`;
+        const h = Math.floor(m / 60); if (h < 24) return `${h}h ago`;
+        const d = Math.floor(h / 24); return `${d}d ago`;
+      }
+
+      function sorted(list, mode) {
+        return [...list].sort((a, b) => {
+          const aa = Number(a.createdAt ?? a.id ?? 0);
+          const bb = Number(b.createdAt ?? b.id ?? 0);
+          return mode === 'oldest' ? aa - bb : bb - aa; // default newest
+        });
+      }
+
       function render(list) {
-        document.getElementById('messages').innerHTML = list.map(m => `
+        const mode = document.getElementById('sort').value;
+        const data = sorted(list, mode);
+        document.getElementById('messages').innerHTML = data.map(m => `
           <li class="item">
-            <b>${m.name}</b>: ${m.message}
-            <button data-id="${m.id}" class="del">Delete</button>
-            <a class="edit" href="add.html?id=${m.id}">Edit</a>
+            <div class="item__row">
+              <div class="item__text">
+                <b>${m.name}</b>: ${m.message}
+                ${m.createdAt ? `<small class="muted">${timeAgo(m.createdAt)}</small>` : ""}
+              </div>
+              <div class="item__actions">
+                <button data-id="${m.id}" class="del button button--danger">Delete</button>
+                <a class="button" href="add.html?id=${m.id}">Edit</a>
+              </div>
+            </div>
           </li>
         `).join('');
+
         document.querySelectorAll('.del').forEach(btn => {
           btn.onclick = async () => {
-            await fetch('/api/messages/' + btn.dataset.id, { method: 'DELETE' });
+            await fetch(`${window.API_URL}/messages/` + btn.dataset.id, { method: 'DELETE' });
             load();
           };
         });
       }
 
-      async function load() {
-        const r = await fetch('/api/messages');
-        cache = await r.json();
-        render(cache);
-      }
-
-      document.getElementById('q').addEventListener('input', (e) => {
-        const t = e.target.value.toLowerCase();
+      function filterAndRender() {
+        const q = document.getElementById('q').value.toLowerCase();
         const filtered = cache.filter(m =>
-          (m.name || '').toLowerCase().includes(t) ||
-          (m.message || '').toLowerCase().includes(t)
+          (m.name || '').toLowerCase().includes(q) ||
+          (m.message || '').toLowerCase().includes(q)
         );
         render(filtered);
-      });
+      }
+
+      async function load() {
+        const r = await fetch(`${window.API_URL}/messages`);
+        cache = await r.json();
+        filterAndRender();
+      }
+
+      document.getElementById('q').addEventListener('input', filterAndRender);
+      document.getElementById('sort').addEventListener('change', filterAndRender);
 
       load();
     </script>

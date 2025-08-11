@@ -1,5 +1,5 @@
 resource "aws_sns_topic" "alerts" {
-  name = "${var.project}-alerts"
+  name       = "${var.project}-alerts"
   depends_on = [aws_dynamodb_table.guest_messages]
 }
 
