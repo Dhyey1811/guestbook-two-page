@@ -10,7 +10,14 @@ variable "aws_region" {
 }
 
 variable "alarm_email" {
-  description = "Email for CloudWatch alarms"
+  description = "Email for CloudWatch alarms (optional)"
   type        = string
-  default     = "" # set in tfvars
+  default     = ""
+}
+
+# used by CI offline plans
+variable "ci" {
+  description = "If true, provider skips account/cred checks"
+  type        = bool
+  default     = false
 }
