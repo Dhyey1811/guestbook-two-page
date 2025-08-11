@@ -3,6 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <title>Add Message</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="stylesheet" href="style.css">
   </head>
   <body>
@@ -15,21 +16,22 @@
         <textarea id="message" rows="4" required class="input"></textarea>
         <button type="submit" class="button">Submit</button>
       </form>
-      <a href="index.html">← Back</a>
+      <a class="link" href="index.html">← Back</a>
     </main>
 
+    <script src="config.js"></script>
     <script>
       const params = new URLSearchParams(location.search);
       const id = params.get('id');
 
       async function loadIfEditing() {
         if (!id) return;
-        const r = await fetch('/api/messages');
+        const r = await fetch(`${window.API_URL}/messages`);
         const data = await r.json();
         const item = data.find(x => String(x.id) === String(id));
         if (item) {
-          document.getElementById('name').value = item.name;
-          document.getElementById('message').value = item.message;
+          document.getElementById('name').value = item.name || "";
+          document.getElementById('message').value = item.message || "";
           document.querySelector('h1').textContent = 'Edit Message';
         }
       }
@@ -41,19 +43,18 @@
         if (!name || !message) return;
 
         if (id) {
-          await fetch('/api/messages/' + id, {
+          await fetch(`${window.API_URL}/messages/` + id, {
             method: 'PUT',
             headers: {'Content-Type':'application/json'},
             body: JSON.stringify({ name, message })
           });
         } else {
-          await fetch('/api/messages', {
+          await fetch(`${window.API_URL}/messages`, {
             method: 'POST',
             headers: {'Content-Type':'application/json'},
             body: JSON.stringify({ name, message })
           });
         }
-
         location.href = 'index.html';
       });
 
