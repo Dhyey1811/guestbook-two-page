@@ -36,18 +36,29 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
 
-      
-
-      # Don't talk to the S3 backend in PR checks
-      - name: Terraform init (no backend)
+      # Auto-format (don't fail on style)
+      - name: Terraform fmt (auto)
         working-directory: infra/terraform
-        run: terraform init -backend=false -input=false
+        run: terraform fmt -recursive
+
+      # 🔧 Disable backend just for PR checks so we don't need AWS creds
+      - name: Temporarily disable backend
+        working-directory: infra/terraform
+        shell: bash
+        run: |
+          if [ -f backend.tf ]; then
+            mv backend.tf backend.tf.disabled
+          fi
+
+      - name: Terraform init (local)
+        working-directory: infra/terraform
+        run: terraform init -input=false
 
       - name: Terraform validate
         working-directory: infra/terraform
         run: terraform validate
 
-      # Offline plan with dummy creds so AWS provider doesn't complain
+      # Offline plan with dummy creds so the AWS provider doesn't complain
       - name: Terraform plan (offline)
         env:
           TF_VAR_ci: true
