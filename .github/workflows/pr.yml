@@ -36,10 +36,7 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
 
-      # Auto-format instead of -check so PRs don't fail on fmt
-      - name: Terraform fmt (auto)
-        working-directory: infra/terraform
-        run: terraform fmt -recursive
+      
 
       # Don't talk to the S3 backend in PR checks
       - name: Terraform init (no backend)
