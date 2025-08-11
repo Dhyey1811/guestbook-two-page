@@ -1,0 +1,30 @@
+name: PR Checks
+on: { pull_request: { branches: [ "main" ] } }
+jobs:
+  test-and-plan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 18 }
+      - name: Backend deps
+        run: npm ci
+        working-directory: backend
+      - name: Unit tests (coverage)
+        run: npm test -- --coverage
+        working-directory: backend
+      - uses: hashicorp/setup-terraform@v3
+      - name: Terraform fmt
+        run: terraform fmt -check -recursive
+        working-directory: infra/terraform
+      - name: Terraform init
+        run: terraform init -input=false
+        working-directory: infra/terraform
+      - name: Terraform validate
+        run: terraform validate
+        working-directory: infra/terraform
+      - name: Terraform plan
+        env:
+          AWS_REGION: us-east-1
+        run: terraform plan -input=false
+        working-directory: infra/terraform
