@@ -27,6 +27,13 @@
 
     <ul id="messages" class="list"></ul>
 
+    <!-- NEW: Pagination controls -->
+    <div id="pager" class="controls" style="justify-content:flex-end">
+      <button id="prev" class="button" type="button">Prev</button>
+      <span id="pageInfo" class="muted">1 / 1</span>
+      <button id="next" class="button" type="button">Next</button>
+    </div>
+
     <!-- Toast (used after delete) -->
     <div id="toast" class="toast" aria-live="polite"></div>
 
@@ -34,6 +41,8 @@
     <script src="config.js"></script>
     <script>
       let cache = [];
+      // NEW: pagination state
+      let page = 1, perPage = 5;
 
       function timeAgo(ts) {
         if (!ts) return "";
@@ -67,10 +76,21 @@
         setTimeout(() => t.classList.remove('is-visible'), 1600);
       }
 
+      // NEW: paginate helper
+      function paginate(list){
+        const total = Math.max(1, Math.ceil(list.length / perPage));
+        if (page > total) page = total;
+        const start = (page - 1) * perPage;
+        return { data: list.slice(start, start + perPage), total };
+      }
+
       function render(list) {
         const q = (document.getElementById('q')?.value || "").trim();
         const mode = document.getElementById('sort').value;
-        const data = sorted(list, mode);
+        const sortedData = sorted(list, mode);
+
+        // NEW: apply pagination for display
+        const { data, total } = paginate(sortedData);
 
         document.getElementById('messages').innerHTML = data.map(m => `
           <li class="item">
@@ -87,6 +107,11 @@
             </div>
           </li>
         `).join('');
+
+        // NEW: update pager UI
+        document.getElementById('pageInfo').textContent = `${page} / ${total}`;
+        document.getElementById('prev').disabled = page <= 1;
+        document.getElementById('next').disabled = page >= total;
 
         // Confirm before delete + toast
         document.querySelectorAll('.del').forEach(btn => {
@@ -105,6 +130,7 @@
           (m.name || '').toLowerCase().includes(q) ||
           (m.message || '').toLowerCase().includes(q)
         );
+        page = 1; // NEW: reset to page 1 on filter/sort change
         render(filtered);
       }
 
@@ -123,6 +149,10 @@
         filterAndRender();
         q.focus();
       });
+
+      // NEW: pager buttons
+      document.getElementById('prev').addEventListener('click', () => { page = Math.max(1, page - 1); filterAndRender(); });
+      document.getElementById('next').addEventListener('click', () => { page = page + 1; filterAndRender(); });
 
       load();
     </script>
