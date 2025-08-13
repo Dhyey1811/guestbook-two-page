@@ -14,6 +14,8 @@
 
     <div class="controls">
       <input id="q" placeholder="Search by name or text…" class="input" />
+      <button id="clear" class="button" type="button">Clear</button>
+
       <label for="sort">Sort:</label>
       <select id="sort" class="input input--select">
         <option value="newest">Newest first</option>
@@ -23,7 +25,6 @@
 
     <ul id="messages" class="list"></ul>
 
-    <!-- Injected at deploy; default is set inside the file -->
     <script src="config.js"></script>
     <script>
       let cache = [];
@@ -41,18 +42,27 @@
         return [...list].sort((a, b) => {
           const aa = Number(a.createdAt ?? a.id ?? 0);
           const bb = Number(b.createdAt ?? b.id ?? 0);
-          return mode === 'oldest' ? aa - bb : bb - aa; // default newest
+          return mode === 'oldest' ? aa - bb : bb - aa;
         });
       }
 
+      // NEW: highlight helper
+      function hi(text, q){
+        if(!q) return text;
+        const rx = new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`, "ig");
+        return (text||"").replace(rx, "<mark>$1</mark>");
+      }
+
       function render(list) {
+        const q = (document.getElementById('q')?.value || "").trim();
         const mode = document.getElementById('sort').value;
         const data = sorted(list, mode);
+
         document.getElementById('messages').innerHTML = data.map(m => `
           <li class="item">
             <div class="item__row">
               <div class="item__text">
-                <b>${m.name}</b>: ${m.message}
+                <b>${hi(m.name, q)}</b>: <span>${hi(m.message, q)}</span>
                 ${m.createdAt ? `<small class="muted">${timeAgo(m.createdAt)}</small>` : ""}
               </div>
               <div class="item__actions">
@@ -86,8 +96,15 @@
         filterAndRender();
       }
 
+      // events
       document.getElementById('q').addEventListener('input', filterAndRender);
       document.getElementById('sort').addEventListener('change', filterAndRender);
+      document.getElementById('clear').addEventListener('click', () => {
+        const q = document.getElementById('q');
+        q.value = "";
+        filterAndRender();
+        q.focus();
+      });
 
       load();
     </script>
