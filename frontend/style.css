@@ -16,6 +16,8 @@ body {
 .button:hover { background:#f3f4f6; }
 .button--danger { border-color: #fecaca; background:#fff1f2; color:#7f1d1d; }
 .button--danger:hover { background:#ffe4e6; }
+/* NEW: disabled look for pager buttons */
+.button[disabled] { opacity:.5; cursor:not-allowed; }
 
 .input { padding: var(--pad); border:1px solid var(--border); border-radius: var(--radius); }
 .input--select { padding: .45rem; }
