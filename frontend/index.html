@@ -13,9 +13,11 @@
     </header>
 
     <div class="controls">
+      <!-- Search + Clear -->
       <input id="q" placeholder="Search by name or text…" class="input" />
       <button id="clear" class="button" type="button">Clear</button>
 
+      <!-- Sort -->
       <label for="sort">Sort:</label>
       <select id="sort" class="input input--select">
         <option value="newest">Newest first</option>
@@ -25,6 +27,10 @@
 
     <ul id="messages" class="list"></ul>
 
+    <!-- Toast (used after delete) -->
+    <div id="toast" class="toast" aria-live="polite"></div>
+
+    <!-- CI/CD overwrites this with API URL in prod; local uses /api -->
     <script src="config.js"></script>
     <script>
       let cache = [];
@@ -46,11 +52,19 @@
         });
       }
 
-      // NEW: highlight helper
+      // Highlight matches
       function hi(text, q){
         if(!q) return text;
         const rx = new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`, "ig");
         return (text||"").replace(rx, "<mark>$1</mark>");
+      }
+
+      // Toast helper
+      function toast(msg) {
+        const t = document.getElementById('toast');
+        t.textContent = msg;
+        t.classList.add('is-visible');
+        setTimeout(() => t.classList.remove('is-visible'), 1600);
       }
 
       function render(list) {
@@ -62,7 +76,8 @@
           <li class="item">
             <div class="item__row">
               <div class="item__text">
-                <b>${hi(m.name, q)}</b>: <span>${hi(m.message, q)}</span>
+                <b>${hi(m.name, q)}</b>:
+                <span>${hi(m.message, q)}</span>
                 ${m.createdAt ? `<small class="muted">${timeAgo(m.createdAt)}</small>` : ""}
               </div>
               <div class="item__actions">
@@ -73,9 +88,12 @@
           </li>
         `).join('');
 
+        // Confirm before delete + toast
         document.querySelectorAll('.del').forEach(btn => {
           btn.onclick = async () => {
+            if (!confirm("Delete this message?")) return;
             await fetch(`${window.API_URL}/messages/` + btn.dataset.id, { method: 'DELETE' });
+            toast("Deleted");
             load();
           };
         });
@@ -96,7 +114,7 @@
         filterAndRender();
       }
 
-      // events
+      // Events
       document.getElementById('q').addEventListener('input', filterAndRender);
       document.getElementById('sort').addEventListener('change', filterAndRender);
       document.getElementById('clear').addEventListener('click', () => {
