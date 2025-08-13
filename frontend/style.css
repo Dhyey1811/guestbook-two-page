@@ -27,3 +27,5 @@ body { font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, H
 .link { display:inline-block; margin-top: 1rem; }
 
 .muted { color:#6b7280; font-size: .85em; margin-left: .5rem; }
+/* highlight style */
+mark { background: #fef08a; padding: 0 .15rem; border-radius: 3px; }
