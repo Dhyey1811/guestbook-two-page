@@ -31,7 +31,7 @@ resource "aws_lambda_function" "api" {
   filename         = data.archive_file.lambda_zip.output_path
   source_code_hash = data.archive_file.lambda_zip.output_base64sha256
   timeout          = 10
-  environment { variables = { TABLE_NAME = aws_dynamodb_table.guest_messages.name, TEST = "ABC" } }
+  environment { variables = { TABLE_NAME = aws_dynamodb_table.guest_messages.name, TEST = "XYZ" } }
 
 }
 
