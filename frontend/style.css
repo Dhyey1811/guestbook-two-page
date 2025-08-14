@@ -1,25 +1,35 @@
-:root { --pad: .75rem; --radius: 10px; --border: #e5e7eb; }
+/* theme tokens */
+:root {
+  --pad: .75rem; --radius: 10px; --border: #e5e7eb;
+  --bg:#ffffff; --fg:#111827; --muted:#6b7280; --btn:#f9fafb; --btn-hover:#f3f4f6;
+}
+:root.dark {
+  --bg:#0b1020; --fg:#e5e7eb; --muted:#9ca3af; --border:#1f2937; --btn:#111827; --btn-hover:#0f172a;
+}
 
 * { box-sizing: border-box; }
 body {
   font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
-  max-width: 900px; margin: 2rem auto; padding: 0 1rem; line-height: 1.5; color: #111827;
+  max-width: 900px; margin: 2rem auto; padding: 0 1rem; line-height: 1.5;
+  color: var(--fg); background: var(--bg);
 }
 
 .bar { display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; }
+.bar__right { display:flex; gap:.75rem; align-items:center; }
+.toggle { font-size:.95rem; display:flex; align-items:center; gap:.4rem; }
+
 .controls { display: flex; gap: .75rem; align-items: center; margin: 1rem 0; flex-wrap: wrap; }
 
 .button {
   display:inline-block; padding: .5rem .8rem; border:1px solid var(--border);
-  border-radius: var(--radius); text-decoration:none; background:#f9fafb; cursor: pointer;
+  border-radius: var(--radius); text-decoration:none; background:var(--btn); cursor: pointer; color: var(--fg);
 }
-.button:hover { background:#f3f4f6; }
+.button:hover { background:var(--btn-hover); }
 .button--danger { border-color: #fecaca; background:#fff1f2; color:#7f1d1d; }
 .button--danger:hover { background:#ffe4e6; }
-/* NEW: disabled look for pager buttons */
 .button[disabled] { opacity:.5; cursor:not-allowed; }
 
-.input { padding: var(--pad); border:1px solid var(--border); border-radius: var(--radius); }
+.input { padding: var(--pad); border:1px solid var(--border); border-radius: var(--radius); background: var(--bg); color: var(--fg); }
 .input--select { padding: .45rem; }
 
 .list { list-style: none; padding: 0; margin: 0; }
@@ -31,12 +41,12 @@ body {
 .container { max-width: 640px; margin: 2rem auto; }
 .form label { display:block; margin:.5rem 0 .25rem; }
 .link { display:inline-block; margin-top: 1rem; }
-.muted { color:#6b7280; font-size: .85em; margin-left: .5rem; }
+.muted { color: var(--muted); font-size: .85em; margin-left: .5rem; }
 
-/* Feature 1: highlight */
+/* highlight for search matches */
 mark { background: #fef08a; padding: 0 .15rem; border-radius: 3px; }
 
-/* Feature 2: toast */
+/* toast */
 .toast {
   position: fixed;
   left: 50%;
